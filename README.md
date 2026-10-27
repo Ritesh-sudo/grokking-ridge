@@ -1,25 +1,25 @@
-# Reproducing "To Grok Grokking: Provable Grokking in Ridge Regression"
+# Grokking in ridge regression and two-layer networks: experiments and bound checks
 
-A from-scratch reproduction (NumPy / PyTorch, CPU) of the experiments in Xu, Vardi, Safran, *To Grok Grokking: Provable Grokking in Ridge Regression*, ICML 2026 ([arXiv:2601.19791](https://arxiv.org/abs/2601.19791)).
+From-scratch experiments (NumPy / PyTorch, CPU) following Xu, Vardi, Safran, *To Grok Grokking: Provable Grokking in Ridge Regression*, ICML 2026 ([arXiv:2601.19791](https://arxiv.org/abs/2601.19791)).
 It re-implements the teacher–student ridge-regression setup, the two-layer ReLU networks and the appendix experiments, checks the paper's Eq. 8 bounds on every run, and compares the curves with the paper's figures.
 
-**How the comparison was done (please read).** The paper's figure data is not published. I compared against the paper's figure images by reading values off them *by eye* (≈ ±10–15 %), so "matches" below means "agrees in shape and rough size", not an exact numerical reproduction. The paper's PDF / LaTeX are not redistributed here; get them from arXiv. Several settings the paper does not state (input distribution, `d` for Fig. 1, sweep grids, step budgets, most seed counts) are my choices and are marked as such. Paper notes (formulas, figure settings, what is unspecified): [`PAPER_NOTES.md`](PAPER_NOTES.md).
+**How the comparison was done (please read).** The paper's figure data is not published. I compared against the paper's figure images by reading values off them *by eye* (≈ ±10–15 %), so "matches" below means "agrees in shape and rough size", not an exact numerical match. The paper's PDF / LaTeX are not redistributed here; get them from arXiv. Several settings the paper does not state (input distribution, `d` for Fig. 1, sweep grids, step budgets, most seed counts) are my choices and are marked as such. Paper notes (formulas, figure settings, what is unspecified): [`PAPER_NOTES.md`](PAPER_NOTES.md).
 
 ## Summary
 
-| Paper figure | What reproduces it | Status vs. the paper's figure |
+| Paper figure | Setup that matches it | Status vs. the paper's figure |
 |---|---|---|
 | Fig. 1 left (ridge/features, zero teacher) | **random ReLU features** + zero teacher, d=100 (50 runs) | matches: test loss within ≈0.02 from step 10 on; train loss lower than the paper's before step 10² (unresolved) |
 | Fig. 1 right (two-layer ReLU net, both layers trained) | two-layer net, zero teacher (50 runs) | matches: test loss at 1/10/10²/10³/10⁴ steps = 0.49/0.45/0.32/0.22/0.13 vs ≈0.47/0.37/0.28/0.21/0.17; train loss starts lower (0.25 vs ≈0.46) |
 | Fig. 2 (ridge sweeps, realizable) | Gaussian features N(0, I/m) | t2 and its bound match; measured t1 ≈15 % lower; the paper's dashed t1 line is ≈2.5× below the literal Eq. 8 (unresolved, see open questions) |
-| Fig. 3 (random features, 4 sweeps) | random ReLU features, **zero teacher** | matches (t2 = 1.5×10⁴ / 1.6×10⁵ / 1.6×10⁶ for λ = 10⁻⁴ / 10⁻⁵ / 10⁻⁶ vs ≈ 1.5×10⁴ / 10⁵ / 10⁶). The *single-ReLU teacher* written in the text does **not** reproduce the curves (test floor ≈0.2, t2 never reached) |
+| Fig. 3 (random features, 4 sweeps) | random ReLU features, **zero teacher** | matches (t2 = 1.5×10⁴ / 1.6×10⁵ / 1.6×10⁶ for λ = 10⁻⁴ / 10⁻⁵ / 10⁻⁶ vs ≈ 1.5×10⁴ / 10⁵ / 10⁶). The *single-ReLU teacher* written in the text does **not** match the curves (test floor ≈0.2, t2 never reached) |
 | Fig. 4 (two-layer net sweeps) | two-layer net, zero teacher (6 seeds) | same trends; magnitudes within ≈1.1–2×; t1 falls with m in both |
 | Fig. 5 (surrogate accuracy) | random ReLU features, zero teacher | matches (0.14/0.16/0.19/0.46 at 10²…10⁵ vs ≈0.15/0.18/0.19/0.45) |
 | Fig. 6 (label noise) | random ReLU features, d=50, zero teacher + noise | matches (test at 10⁴ steps 0.109 vs ≈0.12); noise barely changes grokking time |
 | Fig. 7 (random Fourier features) | RFF, θ\*=e₁ | right shape (plateau ≈0.9, late drop to ≈0) but my drop is ≈1 decade too early (t2 = 2.3×10⁴ vs ≈2×10⁵); cause not found |
 
 Other results: the paper's Eq. 8 bounds held in all 2670 (run, bound) checks; t2 ∝ 1/(ηλ) holds essentially exactly; t1 is independent of λ.
-A methodological finding: the paper's Figs. 1-left, 3, 5 and 6 behave like a **zero teacher on random-ReLU features**, not like the identity-feature model of Sec. 5.1 (which does reproduce Fig. 2). Why the text describes a single-ReLU teacher for Fig. 3 is unresolved.
+A methodological finding: the paper's Figs. 1-left, 3, 5 and 6 behave like a **zero teacher on random-ReLU features**, not like the identity-feature model of Sec. 5.1 (which does match Fig. 2). Why the text describes a single-ReLU teacher for Fig. 3 is unresolved.
 
 ## Setup and how to run
 ```bash
@@ -215,7 +215,7 @@ The literal Eq. 8 t1 bound is ≈1.5×10³ at the Fig. 2 defaults; the paper's d
 <!--/DIAG-->
 
 * The empirical λ⁺min is needed for the *shape* (n and m dependence): replacing it by 1 (the m≫n approximation) gives shape RMS 0.35 octave vs 0.09 and even the wrong direction in m. MP spread alone, ε→2ε alone, or λ⁺min=1 do not close the ≈1.1-octave offset.
-* The only candidates that match both offset and shape (RMS ≈0.1 octave) use **‖θ(0)‖² ≈ ν² instead of mν²**, i.e. as if the init had per-coordinate variance ν²/m. This suggests the plotting code of the t1 line differs from Eq. 6/8 as printed (Remark A.14: mν²/2 ≤ ‖θ(0)‖² ≤ 3mν²/2). b²=1 vs 1.5 cannot be separated at this resolution. **Hypothesis, not established**: I only have 11 eyeballed points and chose among 24 candidates, and the same convention would not be consistent with the paper's t2 line, which my literal Eq. 8 reproduces (≈2^19.3 vs 2^19.2 at λ=2⁻¹⁹).
+* The only candidates that match both offset and shape (RMS ≈0.1 octave) use **‖θ(0)‖² ≈ ν² instead of mν²**, i.e. as if the init had per-coordinate variance ν²/m. This suggests the plotting code of the t1 line differs from Eq. 6/8 as printed (Remark A.14: mν²/2 ≤ ‖θ(0)‖² ≤ 3mν²/2). b²=1 vs 1.5 cannot be separated at this resolution. **Hypothesis, not established**: I only have 11 eyeballed points and chose among 24 candidates, and the same convention would not be consistent with the paper's t2 line, which my literal Eq. 8 matches (≈2^19.3 vs 2^19.2 at λ=2⁻¹⁹).
 
 ### Late rise of the unregularised train loss
 With λ>0, GD converges to the ridge solution θ\*_λ = (ΦᵀΦ + nλI)⁻¹Φᵀy, not to an interpolant. Early on, GD fits the data (L_n drops to ≈ the interpolation level); then weight decay slowly shrinks θ (‖θ‖² falls from ≈10³ to ≈0.11), moving the iterate from the (near-)interpolating solution toward the ridge solution, which has a **small non-zero train error**. L_n therefore creeps up from its minimum to the ridge solution's train loss. The regularised objective L_n(θ;λ) is monotone (tested); the unregularised L_n is not.
@@ -229,7 +229,7 @@ Across the 10 seeds of the realizable default config the largest rise of L_n abo
 ## Part II — Non-linear models (random features and two-layer ReLU networks)
 
 ### Fig. 1 left: random ReLU features + zero teacher (`python -m src.nonlinear --fig1l-rf --seeds 50`)
-The identity-feature run `fig1_left_zero_teacher` above (N(0,I/m) features) does **not** reproduce the paper's Fig. 1 left: its test loss is flat at 1.0 until ~10⁴ steps, while the paper's falls gradually (0.40 → 0.32 → 0.24 → 0.20 → 0.17 → 0.03 at 10⁰…10⁵ steps). With isotropic features and λ=10⁻⁵ the weights barely shrink before ~10⁴ steps, so that shape is impossible there. The paper's curve is reproduced by the random ReLU features model (Sec. 5.2, only output layer trained, a~N(0,1), w~N(0,ν²/(dm)I)) with a **zero teacher**, n=100, m=10⁴, λ=1e-5, ν²=1, η=1, x~N(0,I_d) with **d=100** (d is not stated for Fig. 1; I took the Fig. 3 value after a quick check of d ∈ {10,50,100,300}, where d=100 fit best). 50 runs, exact spectral GD.
+The identity-feature run `fig1_left_zero_teacher` above (N(0,I/m) features) does **not** match the paper's Fig. 1 left: its test loss is flat at 1.0 until ~10⁴ steps, while the paper's falls gradually (0.40 → 0.32 → 0.24 → 0.20 → 0.17 → 0.03 at 10⁰…10⁵ steps). With isotropic features and λ=10⁻⁵ the weights barely shrink before ~10⁴ steps, so that shape is impossible there. The paper's curve is matched by the random ReLU features model (Sec. 5.2, only output layer trained, a~N(0,1), w~N(0,ν²/(dm)I)) with a **zero teacher**, n=100, m=10⁴, λ=1e-5, ν²=1, η=1, x~N(0,I_d) with **d=100** (d is not stated for Fig. 1; I took the Fig. 3 value after a quick check of d ∈ {10,50,100,300}, where d=100 fit best). 50 runs, exact spectral GD.
 
 | steps | my test | paper test (read off figure by eye) | my train (with ½) | paper train |
 |---|---|---|---|---|
@@ -240,7 +240,7 @@ The identity-feature run `fig1_left_zero_teacher` above (N(0,I/m) features) does
 | 10⁴ | 0.166 | 0.17 | ≈0 | – |
 | 10⁵ | 0.027 | 0.03 | ≈0 | – |
 
-Test loss matches within ≈0.02 from step 10 on. The train curve matches only at step 10² and is lower than the paper's before that (the paper's train≈test at step 1; with or without the ½ I do not reproduce that exactly) — an unresolved discrepancy, probably a loss-convention or init-averaging detail. Measured t1 = 443 ± 50, t2 = (1.60 ± 0.07)×10⁵ (ε=c=0.01, 50 runs; Eq. 8's Gaussian-feature bounds are not claimed to apply to this feature map). ![](results/nl_fig1_left_rf.png)
+Test loss matches within ≈0.02 from step 10 on. The train curve matches only at step 10² and is lower than the paper's before that (the paper's train≈test at step 1; with or without the ½ I do not match that exactly) — an unresolved discrepancy, probably a loss-convention or init-averaging detail. Measured t1 = 443 ± 50, t2 = (1.60 ± 0.07)×10⁵ (ε=c=0.01, 50 runs; Eq. 8's Gaussian-feature bounds are not claimed to apply to this feature map). ![](results/nl_fig1_left_rf.png)
 
 ### Fig. 1 right: two-layer ReLU net, zero teacher
 (both layers trained, zero teacher, d=50, n=50, m=1000, λ=0.1, ν²=1, η=1e-4, explicit GD in PyTorch float64, **50 independent runs** (own dataset + init each) as in the paper, 6×10⁵ steps; shaded = min–max over runs):
@@ -248,7 +248,7 @@ train loss falls below 0.01 at t1 = 2054 ± 269 steps (mean ± sd) while test lo
 ![fig1 right](results/nl_fig1_right.png)
 
 ### Fig. 3: random ReLU features, paper's panel values
-Compared with the paper's Fig. 3 panels (read off by eye), the single-ReLU-neuron teacher written in the text gives a test floor of ≈0.2 and no t2, whereas the paper's curves go to ≈0 with t2 ∝ 1/λ and start at ≈0.35–0.4 (test at step 1 scales with ν², 0.35 / 2.1 / 3.7 for ν²=1/5/10). A **zero teacher** reproduces them: random ReLU features, d=100, n=100, m=10⁴, λ=1e-5, ν²=1, η=1, 5 seeds, panel values as in the paper's legends (λ ∈ {1e-4,1e-5,1e-6}, n ∈ {100,200,500}, m ∈ {10³,10⁴,10⁵}, ν² ∈ {1,5,10}).
+Compared with the paper's Fig. 3 panels (read off by eye), the single-ReLU-neuron teacher written in the text gives a test floor of ≈0.2 and no t2, whereas the paper's curves go to ≈0 with t2 ∝ 1/λ and start at ≈0.35–0.4 (test at step 1 scales with ν², 0.35 / 2.1 / 3.7 for ν²=1/5/10). A **zero teacher** matches them: random ReLU features, d=100, n=100, m=10⁴, λ=1e-5, ν²=1, η=1, 5 seeds, panel values as in the paper's legends (λ ∈ {1e-4,1e-5,1e-6}, n ∈ {100,200,500}, m ∈ {10³,10⁴,10⁵}, ν² ∈ {1,5,10}).
 * **λ:** t2 = 1.52e+04 / 1.61e+05 / 1.56e+06 (paper ≈ 1.5×10⁴ / 10⁵ / 10⁶; ∝ 1/λ); t1 = 437 / 476 / 476 (no λ-dependence).
 * **n:** test loss at 10⁴ steps = 0.155 / 0.115 / 0.080 (paper ≈ 0.15 / 0.11 / 0.08); t1 = 476 / 995 / 3064 (grows with n, so small n amplifies grokking).
 * **m:** curves nearly identical for m=10³…10⁵ (t2 ≈ 1.5–1.6×10⁵), as in the paper.
@@ -291,9 +291,9 @@ Exact spectral GD, MC test loss. Paper values are read off its figures by eye. N
 
 ## Open questions for the authors
 
-A. **Fig. 2 vs the paper's images (re-checked at the default point n=100, m=1000, ν²=1, η=1; paper values read off by eye, ±10–15%):** measured t2 ≈ 2.3×10⁴ (paper ≈2.3×10⁴), t2 bound ≈ 1.2×10⁴ (paper ≈1.2×10⁴), measured t1 = 218 ± 13 (paper ≈ 256, i.e. mine ≈15% lower), literal-Eq.-8 t1 bound = 1480 (paper's dashed ≈ 560–610, i.e. mine ≈2.5× higher). Over m = 1000/2000/3000 the realised λ⁺min is 0.48/0.61/0.68; literal Eq. 8 gives 1479/1209/1126, the variant with ln(14ν²/ε) in place of ln(14mν²/ε) gives 757/590/535, the paper's dashed line reads ≈ 590/495/475. So the variant is ≈1.2–1.3× above the paper's line (literal: ≈2.5×) and both reproduce its decreasing trend in m. Identity features therefore are the right model for Fig. 2 (it is Fig. 1 left that needed random features); the residual t1-bound gap is a formula/constant question, not a model mismatch.
-B. Which convention generates the dashed t1 line in Fig. 2? Eq. 6/8 with ‖θ(0)‖² = mν² gives ≈2.2–2.5× larger values than the plot; ‖θ(0)‖² ≈ ν² reproduces it.
-C. Fig. 1 (left) starts near 0.4 for both train and test. Random ReLU features (d=100) reproduce the test curve but not the train curve before step ≈10². Which loss convention (½ or not, per-step averaging) is plotted for the train loss?
+A. **Fig. 2 vs the paper's images (re-checked at the default point n=100, m=1000, ν²=1, η=1; paper values read off by eye, ±10–15%):** measured t2 ≈ 2.3×10⁴ (paper ≈2.3×10⁴), t2 bound ≈ 1.2×10⁴ (paper ≈1.2×10⁴), measured t1 = 218 ± 13 (paper ≈ 256, i.e. mine ≈15% lower), literal-Eq.-8 t1 bound = 1480 (paper's dashed ≈ 560–610, i.e. mine ≈2.5× higher). Over m = 1000/2000/3000 the realised λ⁺min is 0.48/0.61/0.68; literal Eq. 8 gives 1479/1209/1126, the variant with ln(14ν²/ε) in place of ln(14mν²/ε) gives 757/590/535, the paper's dashed line reads ≈ 590/495/475. So the variant is ≈1.2–1.3× above the paper's line (literal: ≈2.5×) and both show its decreasing trend in m. Identity features therefore are the right model for Fig. 2 (it is Fig. 1 left that needed random features); the residual t1-bound gap is a formula/constant question, not a model mismatch.
+B. Which convention generates the dashed t1 line in Fig. 2? Eq. 6/8 with ‖θ(0)‖² = mν² gives ≈2.2–2.5× larger values than the plot; ‖θ(0)‖² ≈ ν² gives values close to it.
+C. Fig. 1 (left) starts near 0.4 for both train and test. Random ReLU features (d=100) match the test curve but not the train curve before step ≈10². Which loss convention (½ or not, per-step averaging) is plotted for the train loss?
 D. The default η=1 does not satisfy Thm 4.2's step-size condition η < 1/(λ+b²) since b² ≥ ‖φ(x)‖² ≈ 1. Is the condition needed for Eq. 6–7 (it appears to be needed only for Thm 4.6), and are the experiments in the regime of the theorem at all (Eq. 3 needs n ≳ 7×10⁴ at ε=0.01 if constants are 1)?
 E. With φ ~ N(0, I/m), the zero predictor has test loss ‖θ\*‖²/m = 10⁻³ at m=1000, already ≪ c = 0.01, and the ridge solution at n=100 has test loss only 0.88× that of the zero predictor (seed 2: 8.8×10⁻⁴ vs 10⁻³). "Generalisation" at c=0.01 in the realizable experiments therefore mostly reflects weight decay removing the initialisation noise, not learning θ\*. Was a threshold relative to the null predictor intended?
 F. Are the Fig. 2 error bars over seeds, and how many?

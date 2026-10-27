@@ -159,7 +159,7 @@ def _rf_zero_job(args):
 
 
 def exp_fig1_left_rf(seeds, T):
-    """Paper Fig. 1 left reproduced with the random ReLU features model (only a trained), ZERO teacher.
+    """Paper Fig. 1 left, run with the random ReLU features model (only a trained), ZERO teacher.
     Settings: n=100, m=1e4, d=100 (d is my pick: it is the Fig. 3 value), lam=1e-5, nu2=1, eta=1, 50 runs.
     Evidence for this model: matches the paper's curve readings (PAPER_FIG1_LEFT, read off the figure by eye)."""
     from multiprocessing import Pool

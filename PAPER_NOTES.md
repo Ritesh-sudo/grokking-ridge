@@ -100,7 +100,7 @@ Needs φ_i ~ N(0, I/m), c = ε, ηλ ≤ 0.01, m = Ω(‖θ*‖²/ε). Uses b² 
 6. **Input distribution D_x** for Figs 1-right, 3, 4 (d-dimensional inputs, Gaussian assumed?) — UNSPECIFIED; for Sec 5.1 the paper specifies features directly as φ~N(0,I/m) while also stating "d" in other figures (Fig 1 left lists no d).
 7. **Feature map in Fig 1 Left**: "ridge regression" with m=10000; whether x∈R^m identity features — assumed from Sec 5.1 but not stated for Fig 1. UNSPECIFIED.
 8. **Empirical t₁/t₂ procedure**: Sec 3 defines t₁ (last step with L_n ≥ ε) and t₂ (first step with L ≤ c), but the maximum step budget and how runs that never reach c are handled are UNSPECIFIED.
-9. **Test-loss normalization:** train loss has a 1/2 factor, test loss does not, so "c = ε = 0.01" is compared across slightly different normalizations. Paper doesn't comment. (A real wrinkle for reproduction — see README later.)
+9. **Test-loss normalization:** train loss has a 1/2 factor, test loss does not, so "c = ε = 0.01" is compared across slightly different normalizations. Paper doesn't comment. (A real wrinkle when comparing against the paper — see README later.)
 10. **Teacher in Fig 3 (non-realizable):** w* direction / how many steps / label scaling UNSPECIFIED.
 11. **Figure 4 / Fig 1-right init scale of `a`**: stated (a_j~N(0,1/m)); but the **output-scaling (e.g. 1/√m factor)** of the network, and bias terms, are UNSPECIFIED (formula N = Σ a_j σ(⟨w_j,x⟩), no bias).
 12. **Fig 1 Right λ = 0.1** vs Sec 5.3 **default λ = 0.05** — different values, both stated; not an error, but sweeps in Fig 4 are centered at 0.05.
@@ -109,7 +109,7 @@ Needs φ_i ~ N(0, I/m), c = ε, ηλ ≤ 0.01, m = Ω(‖θ*‖²/ε). Uses b² 
 15. **Eq. 7 vs Eq. 8 consistency:** Eq. 7 has 4ηλ in the denominator; Eq. 8 uses 2.02ηλ (tighter ln(1−x) ≥ −1.01x applied to a (1−ηλ)^{2t}... the factor-2 bookkeeping is the paper's; I'll implement Eq. 8 as the "theory line" for Gaussian features, and Eq. 7 only as the generic version).
 16. **Eq. 8 assumes c = ε and m ≥ ‖θ*‖²/ε**: with m=1000, ε=0.01 this is m ≥ 100, fine. For m=100 sweeps in "vary m", m must stay ≫ n for (m−n) > 0.
 
-## 5. Things to verify numerically before trusting the reproduction
+## 5. Things to verify numerically before trusting the results
 - Whether η = 1 is stable with φ~N(0,I/m) at the paper's n, m (check λ_max(ΦᵀΦ)/n vs 1/η − λ).
 - That the t₂ ≥ Eq. 8 bound is actually respected by simulation (it's a lower bound; a violation would indicate a normalization mismatch, e.g. the 1/2 factor).
 - That the t₁ ≤ Eq. 8 bound is respected, using the *realized* λ⁺_min(ΦᵀΦ) of each sampled dataset.

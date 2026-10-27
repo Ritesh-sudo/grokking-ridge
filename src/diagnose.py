@@ -1,5 +1,5 @@
 """Diagnostics (NOT part of the official results):
- (1) t1 diagnosis: which convention of Eq. 8's t1 bound reproduces the paper's dashed t1 line in Fig. 2?
+ (1) t1 diagnosis: which convention of Eq. 8's t1 bound gives the paper's dashed t1 line in Fig. 2?
      "diagnosis, not a fit": the literal Eq. 8 stays the reported bound everywhere else.
  (2) Late rise of the unregularised train loss (weight decay pulling theta from the interpolant toward the ridge solution).
 """
