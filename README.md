@@ -40,7 +40,7 @@ Tables between `<!--...-->` markers are generated from `results/*.json` by `src/
 
 ## Methods
 
-### Model, exactly as the paper (Sec. 2, 5.1, Remark A.14)
+### Model (paper Sec. 2, 5.1, Remark A.14)
 Features φ(x_i) ~ N(0, I_m/m) i.i.d. (identity feature map), noiseless labels y = Φθ\*, ‖θ\*‖=1 (or θ\*=0), init θ(0) ~ N(0, ν²I_m),
 loss L_n(θ;λ) = (1/2n)‖Φθ−y‖² + (λ/2)‖θ‖², full-batch GD with fixed η. Train metric L_n(θ) = (1/2n)‖Φθ−y‖² (with the ½); test metric L(θ) = E(⟨θ−θ\*,φ⟩)² = ‖θ−θ\*‖²/m (no ½, exact closed form; we also log a 10k-sample Monte-Carlo estimate and the ½-scaled test loss `test_half`).
 Feature scaling: with unit-variance features λ_max(ΦᵀΦ)/n ≈ 17 at n=100, m=1000, so η=1 would diverge. With the paper's N(0,I/m) it is ≈0.017, so η=1 is far inside the stable region. η is never changed; every config is checked (`train.check_stable`) and unstable ones would be logged and skipped. Across all 1470 sweep runs none was GD-unstable (η < 2/(λ+λ_max/n) always held); 20 runs (λ=1, η=1 in F1/F3, all at the degenerate end of the λ sweep) violate the paper's stricter condition η < 1/(λ+λ_max/n) of Thm 4.4 while still converging, and are flagged in the logs.
