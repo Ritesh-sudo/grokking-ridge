@@ -1,17 +1,12 @@
 # Grokking in ridge regression and two-layer networks: experiments and bound checks
 
-From-scratch experiments (NumPy / PyTorch, CPU) following Xu, Vardi, Safran, *To Grok Grokking: Provable Grokking in Ridge Regression*, ICML 2026 ([arXiv:2601.19791](https://arxiv.org/abs/2601.19791)).
-It re-implements the teacher–student ridge-regression setup, the two-layer ReLU networks and the appendix experiments, checks the paper's Eq. 8 bounds on every run, and compares the curves with the paper's figures.
-
-**How the comparison was done (please read).** The paper's figure data is not published. I compared against the paper's figure images by reading values off them *by eye* (≈ ±10–15 %), so "matches" below means "agrees in shape and rough size", not an exact numerical match. The paper's PDF / LaTeX are not redistributed here; get them from arXiv. Several settings the paper does not state (input distribution, `d` for Fig. 1, sweep grids, step budgets, most seed counts) are my choices and are marked as such. Paper notes (formulas, figure settings, what is unspecified): [`PAPER_NOTES.md`](PAPER_NOTES.md).
-
 ## Summary
 
 | Paper figure | Setup that matches it | Status vs. the paper's figure |
 |---|---|---|
 | Fig. 1 left (ridge/features, zero teacher) | **random ReLU features** + zero teacher, d=100 (50 runs) | matches: test loss within ≈0.02 from step 10 on; train loss lower than the paper's before step 10² (unresolved) |
 | Fig. 1 right (two-layer ReLU net, both layers trained) | two-layer net, zero teacher (50 runs) | matches: test loss at 1/10/10²/10³/10⁴ steps = 0.49/0.45/0.32/0.22/0.13 vs ≈0.47/0.37/0.28/0.21/0.17; train loss starts lower (0.25 vs ≈0.46) |
-| Fig. 2 (ridge sweeps, realizable) | Gaussian features N(0, I/m) | t2 and its bound match; measured t1 ≈15 % lower; the paper's dashed t1 line is ≈2.5× below the literal Eq. 8 (unresolved, see open questions) |
+| Fig. 2 (ridge sweeps, realizable) | Gaussian features N(0, I/m) | t2 and its bound match; measured t1 ≈15 % lower; the paper's dashed t1 line is ≈2.5× below the literal Eq. 8 (unresolved) |
 | Fig. 3 (random features, 4 sweeps) | random ReLU features, **zero teacher** | matches (t2 = 1.5×10⁴ / 1.6×10⁵ / 1.6×10⁶ for λ = 10⁻⁴ / 10⁻⁵ / 10⁻⁶ vs ≈ 1.5×10⁴ / 10⁵ / 10⁶). The *single-ReLU teacher* written in the text does **not** match the curves (test floor ≈0.2, t2 never reached) |
 | Fig. 4 (two-layer net sweeps) | two-layer net, zero teacher (6 seeds) | same trends; magnitudes within ≈1.1–2×; t1 falls with m in both |
 | Fig. 5 (surrogate accuracy) | random ReLU features, zero teacher | matches (0.14/0.16/0.19/0.46 at 10²…10⁵ vs ≈0.15/0.18/0.19/0.45) |
@@ -253,7 +248,7 @@ Compared with the paper's Fig. 3 panels (read off by eye), the single-ReLU-neuro
 * **n:** test loss at 10⁴ steps = 0.155 / 0.115 / 0.080 (paper ≈ 0.15 / 0.11 / 0.08); t1 = 476 / 995 / 3064 (grows with n, so small n amplifies grokking).
 * **m:** curves nearly identical for m=10³…10⁵ (t2 ≈ 1.5–1.6×10⁵), as in the paper.
 * **ν²:** t2 = 1.61e+05 / 2.48e+05 / 2.82e+05, t1 = 476 / 205 / 133; test at 10² steps = 0.26 / 1.00 / 1.91 (paper ≈ 0.22 / 1.2 / 2.5, i.e. mine ≈ 15–25% lower for ν²>1).
-Why the text says "single ReLU teacher" yet the curves behave like a zero teacher is unresolved (if inputs/teacher were scaled so that E[y²] ≪ c=0.01 the effect would be the same, cf. open question E). Full numbers: `results/nl_fig3_zero_teacher_summary.json` (`python -m src.nonlinear --fig3p --seeds 5`).
+Why the text says "single ReLU teacher" yet the curves behave like a zero teacher is unresolved (if inputs/teacher were scaled so that E[y²] ≪ c=0.01 the effect would be the same). Full numbers: `results/nl_fig3_zero_teacher_summary.json` (`python -m src.nonlinear --fig3p --seeds 5`).
 ![fig3](results/nl_fig3_zero_teacher_paper_grids.png)
 
 
@@ -278,7 +273,7 @@ Qualitatively as in the ridge theory: t2 ∝ 1/λ (halving λ doubles t2), t1 in
 Exact spectral GD, MC test loss. Paper values are read off its figures by eye. Numbers: `results/app_summary.json` (earlier, non-matching versions: `results/app_summary_old_models.json`).
 * **Fig. 5 (surrogate accuracy P[N²≤0.01], single run as in the paper): random ReLU features + zero teacher, m=10⁴, d=100, n=100, λ=1e-5.** Test accuracy at 10¹/10²/10³/10⁴/10⁵ steps = 0.125 / 0.138 / 0.164 / 0.188 / 0.462, final 1.00; paper ≈ 0.15 / 0.15 / 0.18 / 0.19 / 0.45, → 1.0 at ≈2×10⁵. (Step 1: mine 0.05 vs paper ≈ 0.12, single-run noise.) My earlier version used the ReLU teacher and only reached 0.21. ![](results/app_fig5_accuracy.png)
 * **Fig. 6 (label noise): random ReLU features, d=50, m=5000, n=100, λ=1e-5, zero teacher, 10 seeds.** Test loss for std=0.01 at 10⁰…10⁵ steps = 0.409 / 0.307 / 0.197 / 0.133 / 0.109 / 0.016; paper ≈ 0.385 / 0.28 / 0.18 / 0.145 / 0.12 / 0.02. t2 = 1.38e+05 / 1.44e+05 / 1.7e+05 for std = 0.01 / 0.05 / 0.1: noise barely changes grokking time, as in the paper (≈ +25% at std=0.1); it raises the final test loss (5×10⁻⁵ → 5×10⁻³). Train loss at 10² steps: 0.056 (paper ≈ 0.045). The earlier identity-feature version (flat test curve) did not match. ![](results/app_fig6_label_noise.png)
-* **Fig. 7 (random Fourier features): m=5000, d=10, n=100, λ=1e-4, x~N(0,I₁₀), teacher θ\*=e₁ (literal "one random Fourier feature", target amplitude √(2/m)), 10 seeds.** Test loss at 10⁰…10⁵ steps = 1.00 / 0.99 / 0.94 / 0.77 / 0.11 / 0.0002, paper ≈ 0.95 / 0.93 / 0.885 / 0.877 / 0.735 / 0.12. Same shape (plateau ≈ 0.9, late drop to ≈0) but **my drop happens ≈1 decade earlier** (t2 = 2.34e+04; paper ≈ 2×10⁵); t1 = 192. Cause not found (λ and θ(0) scale are as stated). Because the teacher has tiny variance (zero-predictor loss ≈ 2×10⁻⁴ ≪ c), "generalisation" here is mostly weight decay removing init noise (cf. open question E). My earlier amplitude-√m / input-scale scan was unnecessary and is superseded. ![](results/app_fig7_fourier.png)
+* **Fig. 7 (random Fourier features): m=5000, d=10, n=100, λ=1e-4, x~N(0,I₁₀), teacher θ\*=e₁ (literal "one random Fourier feature", target amplitude √(2/m)), 10 seeds.** Test loss at 10⁰…10⁵ steps = 1.00 / 0.99 / 0.94 / 0.77 / 0.11 / 0.0002, paper ≈ 0.95 / 0.93 / 0.885 / 0.877 / 0.735 / 0.12. Same shape (plateau ≈ 0.9, late drop to ≈0) but **my drop happens ≈1 decade earlier** (t2 = 2.34e+04; paper ≈ 2×10⁵); t1 = 192. Cause not found (λ and θ(0) scale are as stated). Because the teacher has tiny variance (zero-predictor loss ≈ 2×10⁻⁴ ≪ c), "generalisation" here is mostly weight decay removing init noise. My earlier amplitude-√m / input-scale scan was unnecessary and is superseded. ![](results/app_fig7_fourier.png)
 
 ## Deviations from the paper / caveats
 1. **Paper values are read off figures by eye** (≈ ±10–15 %); no underlying data was available.
@@ -288,15 +283,3 @@ Exact spectral GD, MC test loss. Paper values are read off its figures by eye. N
 5. **Larger sweep ranges than the paper** for the ridge sweeps (λ up to 2⁰, n up to 900, ν² down to 10⁻², extra η and m values) and two additional families (F2, F3). Points outside Eq. 8's validity (ηλ>0.01) only have measured values.
 6. **Theory conditions are not met at the paper's scale** (Eq. 3 would need n ≈ 7×10⁴ at C=1) and the paper's η=1 violates Thm 4.2's own η < 1/(λ+b²) (b² ≥ ‖φ‖² ≈ 1). The bounds nevertheless held in all 2670 checks.
 7. **Unresolved differences:** Fig. 7 timing (≈10× early); the dashed t1 line in Fig. 2 (≈2.5× below the literal Eq. 8); Fig. 1-left/right train loss before step ≈10² (lower than the paper's, possibly a loss-convention or averaging detail); why the Fig. 3 text says "single ReLU teacher" while the curves match a zero teacher; ν²=5,10 test curves in Fig. 3 are ≈15–25 % below the paper's.
-
-## Open questions for the authors
-
-A. **Fig. 2 vs the paper's images (re-checked at the default point n=100, m=1000, ν²=1, η=1; paper values read off by eye, ±10–15%):** measured t2 ≈ 2.3×10⁴ (paper ≈2.3×10⁴), t2 bound ≈ 1.2×10⁴ (paper ≈1.2×10⁴), measured t1 = 218 ± 13 (paper ≈ 256, i.e. mine ≈15% lower), literal-Eq.-8 t1 bound = 1480 (paper's dashed ≈ 560–610, i.e. mine ≈2.5× higher). Over m = 1000/2000/3000 the realised λ⁺min is 0.48/0.61/0.68; literal Eq. 8 gives 1479/1209/1126, the variant with ln(14ν²/ε) in place of ln(14mν²/ε) gives 757/590/535, the paper's dashed line reads ≈ 590/495/475. So the variant is ≈1.2–1.3× above the paper's line (literal: ≈2.5×) and both show its decreasing trend in m. Identity features therefore are the right model for Fig. 2 (it is Fig. 1 left that needed random features); the residual t1-bound gap is a formula/constant question, not a model mismatch.
-B. Which convention generates the dashed t1 line in Fig. 2? Eq. 6/8 with ‖θ(0)‖² = mν² gives ≈2.2–2.5× larger values than the plot; ‖θ(0)‖² ≈ ν² gives values close to it.
-C. Fig. 1 (left) starts near 0.4 for both train and test. Random ReLU features (d=100) match the test curve but not the train curve before step ≈10². Which loss convention (½ or not, per-step averaging) is plotted for the train loss?
-D. The default η=1 does not satisfy Thm 4.2's step-size condition η < 1/(λ+b²) since b² ≥ ‖φ(x)‖² ≈ 1. Is the condition needed for Eq. 6–7 (it appears to be needed only for Thm 4.6), and are the experiments in the regime of the theorem at all (Eq. 3 needs n ≳ 7×10⁴ at ε=0.01 if constants are 1)?
-E. With φ ~ N(0, I/m), the zero predictor has test loss ‖θ\*‖²/m = 10⁻³ at m=1000, already ≪ c = 0.01, and the ridge solution at n=100 has test loss only 0.88× that of the zero predictor (seed 2: 8.8×10⁻⁴ vs 10⁻³). "Generalisation" at c=0.01 in the realizable experiments therefore mostly reflects weight decay removing the initialisation noise, not learning θ\*. Was a threshold relative to the null predictor intended?
-F. Are the Fig. 2 error bars over seeds, and how many?
-G. Figs. 1-left, 3, 5 and 6 behave like a zero teacher on random ReLU features, though the text describes a single-ReLU teacher for Fig. 3. What teacher and input scaling were used?
-H. Fig. 7: which λ / initialisation scale gives t2 ≈ 2×10⁵ (mine is 2.3×10⁴ with the stated values)?
-
