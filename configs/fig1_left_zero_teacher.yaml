@@ -1,0 +1,17 @@
+# Paper Fig. 1 (left): ridge regression, zero teacher. Values from the paper's Fig. 1 setup text:
+# n=100, m=10000, lambda=1e-5, nu2=1, eta=1; eps=c=0.01 (Sec. 5). 50 runs in the paper.
+# PROJECT DEFAULTS (not in the paper): (seeds now 50 as in the paper, was 10) 10k test samples, ~200 log points, budget = 10x t2 bound.
+name: fig1_left_zero_teacher
+teacher: zero
+n: 100
+m: 10000
+nu2: 1.0
+eta: 1.0
+lam: 1.0e-5
+eps: 0.01
+c: 0.01
+seeds: 50
+n_test: 10000
+n_log: 200
+budget_factor: 10
+crosscheck_steps: 200000   # explicit-GD vs spectral cross-check horizon (seed 0)

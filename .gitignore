@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+.DS_Store
+*.pyc
+# the paper's PDF / LaTeX source are not redistributed: download from https://arxiv.org/abs/2601.19791
+paper/

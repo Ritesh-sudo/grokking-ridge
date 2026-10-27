@@ -1,0 +1,16 @@
+# Realizable teacher (||theta*||=1) at the paper's Fig. 2 defaults: n=100, m=1000, nu2=1, lambda=1e-4, eta=1, eps=c=0.01.
+# theta* ~ N(0,I) normalised: PROJECT DEFAULT (paper does not say how theta* is drawn).
+name: fig1_realizable
+teacher: unit
+n: 100
+m: 1000
+nu2: 1.0
+eta: 1.0
+lam: 1.0e-4
+eps: 0.01
+c: 0.01
+seeds: 10
+n_test: 10000
+n_log: 200
+budget_factor: 10
+crosscheck_steps: 200000
