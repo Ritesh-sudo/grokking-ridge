@@ -1,6 +1,6 @@
 """Step 2: hyperparameter sweeps testing the paper's bounds.  `python -m src.sweep --all` regenerates everything.
 
-Three families (see README):
+Three families (see RESULTS.md):
   F1_realizable_paper : unit-norm teacher, paper's Fig. 2 defaults (eps=c=0.01).  Out of regime for Eq. 3.
   F2_realizable_inregime : unit-norm teacher, eps=c=0.5, nu2=100, eta=0.5 -> satisfies Eq. 3/4/5 and eta<1/(lam+b^2) with C=1.
   F3_zero_teacher : zero teacher (Eq. 3 vacuous), eps=c=0.01.

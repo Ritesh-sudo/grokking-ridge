@@ -1,4 +1,4 @@
-"""Generate results/results_tables.md from the JSON/CSV result files (no hand-copied numbers) and splice it into README.md
+"""Generate results/results_tables.md from the JSON/CSV result files (no hand-copied numbers) and splice it into RESULTS.md
 between <!--TABLES-->/<!--/TABLES--> markers."""
 import json, os, re
 import numpy as np
@@ -102,7 +102,7 @@ def build():
         "DIAG": diagnosis_table(), "AMPLIFY": amplify_table(), "LATE": late_rise_text()}
     md = "\n\n".join(f"<!--{k}-->\n{v}\n<!--/{k}-->" for k, v in parts.items())
     open(os.path.join(RES, "results_tables.md"), "w").write(md)
-    rp = os.path.join(ROOT, "README.md")
+    rp = os.path.join(ROOT, "RESULTS.md")
     if os.path.exists(rp):
         s = open(rp).read()
         for k, v in parts.items():

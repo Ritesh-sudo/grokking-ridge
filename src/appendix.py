@@ -1,5 +1,5 @@
 """Paper App. B experiments (Figs. 5-7). All are linear in the trained weights -> exact spectral GD.
-Choices not given by the paper are flagged in README. Usage: python -m src.appendix"""
+Choices not given by the paper are flagged in RESULTS.md. Usage: python -m src.appendix"""
 import json, os
 import numpy as np
 import matplotlib
@@ -39,7 +39,7 @@ def _rf_feats(g, n, m, d, nu2, ntest):
 
 def fig5(T=10_000_000):
     """Surrogate accuracy P_x[N^2 <= eps] vs steps. Paper curves (Fig. 5 loss panel) match the random-features model with a
-    ZERO teacher (see README), so that is what is used: m=1e4, d=100, n=100, eta=1, lam=1e-5, eps=0.01, single run (as the paper)."""
+    ZERO teacher (see RESULTS.md), so that is what is used: m=1e4, d=100, n=100, eta=1, lam=1e-5, eps=0.01, single run (as the paper)."""
     n, m, d, lam, eta, eps = 100, 10000, 100, 1e-5, 1.0, 0.01
     g = np.random.default_rng(0)
     P, Pt = _rf_feats(g, n, m, d, 1.0, 5000)
