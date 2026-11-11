@@ -1,7 +1,6 @@
 # Grokking in ridge regression and two-layer networks
 
-Experiments on grokking (train loss collapses early, test loss follows much later) in over-parameterised ridge regression and two-layer ReLU networks, following Xu, Vardi & Safran, [*To Grok Grokking*](https://arxiv.org/abs/2601.19791) (ICML 2026). NumPy / PyTorch, CPU only. Full tables and caveats: [`RESULTS.md`](RESULTS.md).
-
+Experiments on grokking (train loss collapses early, test loss follows much later) in over-parameterised ridge regression and two-layer ReLU networks.
 ## Key insights
 
 - **Grokking comes from weight decay.** Train loss reaches ε=0.01 within a few hundred steps, while test loss only drops once weight decay shrinks the initialisation noise, at a time t2 ∝ 1/(ηλ). The delay t2 ∝ 1/λ holds essentially exactly; the overfitting time t1 does not depend on λ.
